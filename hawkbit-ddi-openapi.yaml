@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: Hawkbit DDI API
+  version: '1.0'
+servers:
+  - url: https://{server}:{port}/{tenant}/controller/v1
+    description: The production API server
+    variables:
+      server:
+        default: '127.0.0.1'
+        description: The server IP or DNS
+      port:
+        default: '8080'
+        description: The server port
+      tenant:
+        default: 'DEFAULT'
+        description: The tenant
+
+tags:
+  - name: Actions
+    description: Related endpoints for update actions
+  - name: Configurations
+    description: Related endpoints for configurations
+  - name: DeploymentBase
+    description: Related endpoints for deployments
+  - name: SoftwareModules
+
+paths:
+  /{controllerId}:
+    get:
+      tags:
+        - DeploymentBase
+      description: 'This base resource can be regularly polled by the controller on the provisioning target or device in order to retrieve actions that need to be executed. Those are provided as a list of links to give more detailed information about the action. Links are only available for initial configuration or open actions, respectively. The resource supports Etag based modification checks in order to save traffic. Note: deployments have to be confirmed in order to move on to the next action. Cancellations have to be confirmed or rejected.'
+      operationId: getBasePollResource
+      parameters:
+        - $ref: '#/components/parameters/ControllerId'
+      responses:
+        200:
+          description: Base Poll Resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasePollResource'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/GET_BasePollResource'
+        400:
+          description: Bad Request - e.g. invalid parameters
+        401:
+          description: The request requires user authentication
+        403:
+          description: Insufficient permissions, data volume restriction applies or quota limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/ErrorBody'
+        405:
+          description: The http request method is not allowed on the resource
+        406:
+          description: In case accept header is specified and not application/json
+        429:
+          description: Too many requests - the server will refuse further attempts and the client has to wait another second
+
+components:
+  securitySchemes:
+    targetSecurityToken:
+      type: http
+      description: 'There is a 32 alphanumeric character security-token for each created target within IoT hawkBit. This token can be used to authenticate the target at hawkBit through the HTTP-Authorization header with the custom scheme TargetToken.'
+      scheme: bearer
+      bearerFormat: TargetToken
+    gatewaySecurityToken:
+      type: http
+      description: 'Often the targets are connected through a gateway which manages the targets directly and as a result are indirectly connected to the hawkBit update server. To authenticate this gateway and allow it to manage all target instances under its tenant there is a GatewayToken to authenticate this gateway through the HTTP-Authorization header with a custom scheme GatewayToken. This is of course also handy during development or for testing purposes. However, we generally recommend to use this token with care as it allows to act in the name of any device.'
+      scheme: bearer
+      bearerFormat: GatewayToken
+  parameters:
+    ControllerId:
+      name: controllerId
+      in: path
+      required: true
+      description: 'ID of the controller'
+      schema:
+        type: string
+        example: '0baa3ed9-291b-40d7-9077-08cf4768e4e4'
+    ActionId:
+      name: actionId
+      in: path
+      required: true
+      description: 'ID of the action'
+      schema:
+        type: string
+        example: '12'
+    SoftwareModuleId:
+      name: softwareModuleId
+      in: path
+      required: true
+      description: 'ID of the software module'
+      schema:
+        type: string
+        example: '3'
+  schemas:
+    ErrorBody:
+      type: object
+      required:
+        - errorCode
+        - exceptionClass
+        - message
+        - parameters
+      properties:
+        errorCode:
+          type: string
+          description: 'A error code/key set by server'
+          example: '404'
+        exceptionClass:
+          type: string
+          description: 'The involved exceptionClass'
+          example: 'com.hawkbit.ExampleClass'
+        message:
+          type: string
+          description: 'An error message set by the server'
+          example: 'Housten we have a problem'
+        parameters:
+          type: array
+          description: 'A list of parameters'
+          items:
+            type: string
+            example: 'Parameter entry'
+    BasePollResource:
+      type: object
+      properties:
+        config:
+          type: object
+          properties:
+            polling:
+              type: object
+              description: 'Suggested sleep time between polls'
+              properties:
+                sleep:
+                  type: string
+                  description: 'Sleep time in HH:MM:SS notation'
+        _links:
+          type: object
+          description: 'Open Actions that the server has for the target'
+          properties:
+            deploymentBase:
+              type: object
+              description: 'Detailed deployment operation'
+              properties:
+                href:
+                  type: string
+            configData:
+              type: object
+              description: 'Link which is provided whenever the provisioning target or device is supposed to push its configuration data (aka. "controller attributes") to the server. Only shown for the initial configuration, after a successful update action, or if requested explicitly (e.g. via the management UI).'
+              properties:
+                href:
+                  type: string
+security:
+  - targetSecurityToken: []
+  - gatewaySecurityToken: []
