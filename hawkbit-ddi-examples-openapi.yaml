@@ -15,6 +15,16 @@ components:
         id: '87'
         cancelAction:
           stopId: '87'
+    POST_CancelActionFeedback:
+      value:
+        id: '90'
+        time: '20140511T121314'
+        status:
+          result:
+            finished: 'success'
+          execution: 'closed'
+          details:
+            - 'Everything is ok'
     ErrorBody:
       value:
         errorCode: '500',
