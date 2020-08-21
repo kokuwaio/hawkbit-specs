@@ -64,6 +64,45 @@ paths:
         429:
           description: Too many requests - the server will refuse further attempts and the client has to wait another second
 
+  /{controllerId}/cancelAction/{actionId}:
+    get:
+      tags:
+        - Actions
+      description: 'The SP server might cancel an operation, e.g. an unfinished update has a sucessor. It is up to the provisiong target to decide to accept the cancelation or reject it.'
+      operationId: getCancelAction
+      parameters:
+        - $ref: '#/components/parameters/ControllerId'
+        - $ref: '#/components/parameters/ActionId'
+      responses:
+        200:
+          description: Cancel Action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelAction'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/GET_CancelAction'
+        400:
+          description: Bad Request - e.g. invalid parameters
+        401:
+          description: The request requires user authentication
+        403:
+          description: Insufficient permissions, data volume restriction applies or quota limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/ErrorBody'
+        405:
+          description: The http request method is not allowed on the resource
+        406:
+          description: In case accept header is specified and not application/json
+        429:
+          description: Too many requests - the server will refuse further attempts and the client has to wait another second
+
 components:
   securitySchemes:
     targetSecurityToken:
@@ -157,6 +196,24 @@ components:
               properties:
                 href:
                   type: string
+    CancelAction:
+      type: object
+      required: 
+        - id
+      properties:
+        id:
+          type: string
+          description: 'ID of the action'
+        cancelAction:
+          type: object
+          description: 'Action that needs to be canceled'
+          required: 
+            - stopId
+          properties:
+            stopId:
+              type: string
+              description: 'ID of the action that needs to be canceled (typically identical to id field on the cancel action itself)'
+
 security:
   - targetSecurityToken: []
   - gatewaySecurityToken: []
