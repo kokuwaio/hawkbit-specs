@@ -64,6 +64,97 @@ paths:
         429:
           description: Too many requests - the server will refuse further attempts and the client has to wait another second
 
+  /{controllerId}/cancelAction/{actionId}:
+    get:
+      tags:
+        - Actions
+      description: 'The SP server might cancel an operation, e.g. an unfinished update has a sucessor. It is up to the provisiong target to decide to accept the cancelation or reject it.'
+      operationId: getCancelAction
+      parameters:
+        - $ref: '#/components/parameters/ControllerId'
+        - $ref: '#/components/parameters/ActionId'
+      responses:
+        200:
+          description: Cancel Action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelAction'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/GET_CancelAction'
+        400:
+          description: Bad Request - e.g. invalid parameters
+        401:
+          description: The request requires user authentication
+        403:
+          description: Insufficient permissions, data volume restriction applies or quota limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/ErrorBody'
+        405:
+          description: The http request method is not allowed on the resource
+        406:
+          description: In case accept header is specified and not application/json
+        429:
+          description: Too many requests - the server will refuse further attempts and the client has to wait another second
+
+  /{controllerid}/cancelAction/{actionId}/feedback:
+    post:
+      tags:
+        - Actions
+      description: 'It is up to the device how much intermediate feedback is provided. However, the action will be kept open until the controller on the device reports a finished (either successful or error) or rejects the action, e.g. the canceled actions have been started already.'
+      operationId: postCancelActionFeedback
+      parameters:
+        - $ref: '#/components/parameters/ControllerId'
+        - $ref: '#/components/parameters/ActionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelActionFeedback'
+            examples:
+              objectExample:
+                $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/POST_CancelActionFeedback'
+      responses:
+        200:
+          description: operation successful
+        400:
+          description: Bad Request - e.g. invalid parameters
+        401:
+          description: The request requires user authentication
+        403:
+          description: Insufficient permissions, data volume restriction applies or quota limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/ErrorBody'
+        405:
+          description: The http request method is not allowed on the resource
+        406:
+          description: In case accept header is specified and not application/json
+        409:
+          description: E.g. in case an entity is created or modified by another user in another request at the same time. You may retry your modification request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+              examples:
+                objectExample:
+                  $ref: './hawkbit-ddi-examples-openapi.yaml#/components/examples/ErrorBody'
+        415:
+          description: The request was attempt with a media-type which is not supported by the server for this resource.
+        429:
+          description: Too many requests - the server will refuse further attempts and the client has to wait another second
+
+
 components:
   securitySchemes:
     targetSecurityToken:
@@ -157,6 +248,70 @@ components:
               properties:
                 href:
                   type: string
+    CancelAction:
+      type: object
+      required: 
+        - id
+      properties:
+        id:
+          type: string
+          description: 'ID of the action'
+        cancelAction:
+          type: object
+          description: 'Action that needs to be canceled'
+          required: 
+            - stopId
+          properties:
+            stopId:
+              type: string
+              description: 'ID of the action that needs to be canceled (typically identical to id field on the cancel action itself)'
+    CancelActionFeedback:
+      type: object
+      required:
+        - status
+      properties:
+        id:
+          type: string
+          description: id of the action
+        time:
+          type: string
+          description: time on the target device
+        status:
+          type: object
+          description: target action status
+          required:
+            - execution
+            - result
+          properties:
+            execution:
+              type: string
+              description: status of the action execution
+              enum:
+                - closed
+                - proceeding
+                - canceled
+                - scheduled
+                - rejected
+                - resumed
+            result:
+              type: object
+              description: result of the action execution
+              required:
+                - finished
+              properties:
+                finished:
+                  type: string
+                  description: defined status of the result
+                  enum:
+                    - success
+                    - failure
+                    - none
+            details:
+              type: array
+              description: List of details message information
+              items:
+                type: string
+
 security:
   - targetSecurityToken: []
   - gatewaySecurityToken: []

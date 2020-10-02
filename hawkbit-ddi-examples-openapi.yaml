@@ -10,6 +10,21 @@ components:
             href: 'https://ddi-api.host.com/TENANT_ID/controller/v1/CONTROLLER_ID/deploymentBase/84?c=-2054225397'
           configData:
             href: 'https://ddi-api.host.com/TENANT_ID/controller/v1/CONTROLLER_ID/configData'
+    GET_CancelAction:
+      value:
+        id: '87'
+        cancelAction:
+          stopId: '87'
+    POST_CancelActionFeedback:
+      value:
+        id: '90'
+        time: '20140511T121314'
+        status:
+          result:
+            finished: 'success'
+          execution: 'closed'
+          details:
+            - 'Everything is ok'
     ErrorBody:
       value:
         errorCode: '500',
